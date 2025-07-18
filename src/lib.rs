@@ -1,6 +1,7 @@
 #[derive(Clone, Default, Debug)]
 pub struct Tracer {
     pub log: Vec<String>,
+    pub enabled: bool,
 }
 
 #[allow(missing_docs)]
@@ -9,7 +10,17 @@ pub mod wrapper {
     zucchero::init!(Tracer, trace);
 }
 
-pub use wrapper::trace;
+pub fn enable() {
+    wrapper::trace(|s| s.enabled = true);
+}
+
+pub fn disable() {
+    wrapper::trace(|s| s.enabled = false);
+}
+
+pub fn trace<R: Default>(f: impl FnOnce(&mut Tracer) -> R) -> R {
+    wrapper::trace(|s| if s.enabled { f(s) } else { R::default() })
+}
 
 pub fn dump() -> Vec<String> {
     trace(|state| {
